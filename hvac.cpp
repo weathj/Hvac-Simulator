@@ -131,6 +131,7 @@ class Damper {
             return position;
         }
 
+        // Calculate CFM based on fan velocity and damper size and position
         float getCFM(float velocity){
             area = height * width;
             cout << "Area: " << area << endl;
@@ -230,6 +231,7 @@ class AirUnit{
             float cooling_btu = coolingCoil.getArea() * (coolingCoil.temp - ma.temp);
             float heating_btu = heatingCoil.getArea() * (heatingCoil.temp - ma.temp);
 
+            // Ensure that the heating btu is positive and cooling btu is negative
             if (cooling_btu > 0) {
                 cooling_btu = 0;
             } else if (heating_btu < 0) {
@@ -253,16 +255,20 @@ class AirUnit{
             cout << "RA BTU: " << ra_ma_btu << endl;
             ma.btu = oa_ma_btu + ra_ma_btu;
 
+            // Set supply air values
             sa.btu = ma.btu;
             sa.temp = ma.temp;
 
+            // Calculate room temp change
             float total_btu =  (ra.btu + oa.btu) - (sa.btu + room.btu);
             cout << "Total BTU: " << total_btu << endl;
             float temp_change = total_btu / (1000 * room.density * room.specific_heat) / 30; // 30 is the time variable
 
+            // If supply air is less than room air make temp change negative
             if(sa.temp > room.temp){
                 temp_change = temp_change * -1;
             }
+
             float temp = room.temp + temp_change;
             return temp;
         }
