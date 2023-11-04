@@ -1,0 +1,59 @@
+/* Reset some default padding and margin values
+body, h1, h2, ul, p {
+    margin: 0;
+    padding: 0;
+}
+
+/* Set the background color of the page */
+/* body {
+    background-color: #f8f8f8;
+}
+
+/* Set the font family of the page */
+/* body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+} */ 
+
+nav.navbar {
+    background-color: #a6883a;
+}
+
+/* nav ul {
+    list-style-type: none;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 10px;
+}
+
+/* Main content area styling */
+/* #main-content {
+    display: flex;
+}
+
+/* Left side panel styling */
+#left-panel {
+    background-color: #c31616;
+    width: 250px;
+    padding: 20px;
+}
+
+#left-panel ul {
+    list-style-type: none;
+}
+
+#left-panel a {
+    text-decoration: none;
+    color: #333;
+}
+
+#left-panel li {
+    margin-bottom: 15px;
+}
+
+/* Content display area styling */
+/* #content-display {
+    flex-grow: 1;
+    padding: 20px;
+}  */

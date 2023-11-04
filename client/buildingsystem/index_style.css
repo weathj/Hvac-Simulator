@@ -1,0 +1,56 @@
+/* Reset some default padding and margin values */
+body, h1, h2, ul, p {
+    margin: 0;
+    padding: 0;
+}
+
+/* Top navigation bar styling */
+nav {
+    background-color: #4CAF50;
+}
+
+nav ul {
+    list-style-type: none;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 10px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Main content area styling */
+#main-content {
+    display: flex;
+}
+
+/* Left side panel styling */
+#left-panel {
+    background-color: #f8f8f8;
+    width: 250px;
+    padding: 20px;
+}
+
+#left-panel ul {
+    list-style-type: none;
+}
+
+#left-panel a {
+    text-decoration: none;
+    color: #333;
+}
+
+#left-panel li {
+    margin-bottom: 15px;
+}
+
+/* Content display area styling */
+#content-display {
+    flex-grow: 1;
+    padding: 20px;
+}

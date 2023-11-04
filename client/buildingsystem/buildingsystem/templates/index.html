@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Management System</title>
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
+    {% load static %}
+    <script src = "{% static 'myfirst.js' %}"></script>
+    <link rel="stylesheet" href="{%  static 'hvac/index_style.css' %}">
+    <link href='https://fonts.googleapis.com/css?family=K2D' rel='stylesheet'>
+
+</head>
+
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar top-navbar">
+    <ul class="navbar">
+      <li class="nav-brand">
+        <a class="nav-link top-navbar-link" href="/hvac">SIMULATOR</a>
+      </li> 
+      <li class="nav-item">
+        <a class="nav-link top-navbar-link" href="/members">Main Graphic</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link top-navbar-link" href="/members">Equipment Graphics</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link top-navbar-link" href="/members">View Points</a>
+      </li>
+    </ul>
+  </nav>
+
+
+    <!-- Main Content Area -->
+    <div id="main-content">
+        <!-- Left Side Panel -->
+        <aside id="left-panel">
+          <nav class="navbar side-navbar">
+            <ul class="navbar">
+              <li class="nav-item">
+                <a class="nav-link side-navbar-link" href="/hvac">Poll Values</a>
+              </li> 
+              <li class="nav-item">
+                <a class="nav-link side-navbar-link" href="/members">Hold Values</a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+
+        <!-- Content Display Area -->
+        <section id="content-display">
+            <h1>Welcome to the HVAC Management System</h1>
+            <p>Here, you can manage and monitor the air handlers in your building.</p>
+                <div class="container mt-3">
+                <div>
+                  <img src="{% static 'hvac/SingleBasicDuct.png' %}" alt="AHU" style="width:100%;">
+                </div>
+                    <h2>AHU Values</h2>
+                    <p>Current Values Displayed for Air Handler:</p>  
+                    <button onclick="myFunction()">Click Me!</button>          
+                    <table class="table table-dark table-striped">
+                      <thead>
+                        <tr>
+                          <th>Point</th>
+                          <th>Value</th>
+                          <th>Inputs</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>SaTmp</td>
+                          <td>{{ sa_temp }}</td>
+                          <td>
+                            <form action="/hvac/" method="post"> 
+                              {% csrf_token %}
+                              {{ form }}
+                              <input type="text" id="sa_temp" name="sa_temp">
+                              <input type="submit" value="Submit">
+                            </form>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>RaTmp</td>
+                          <td>{{ ra_temp }}</td>
+                          <td>
+                            <form action="/hvac/" method="post"> 
+                              {% csrf_token %}
+                              {{ form }}
+                              <input type="text" id="sa_temp" name="sa_temp">
+                              <input type="submit" value="Submit">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>OaTmp</td>
+                          <td>{{ oa_temp }}</td>
+                          <td>
+                            <form action="/hvac/" method="post"> 
+                              {% csrf_token %}
+                              {{ form }}
+                              <input type="text" id="sa_temp" name="sa_temp">
+                              <input type="submit" value="Submit">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>MaDprPos</td>
+                          <td>{{ madpr_pos }}</td>
+                          <td>
+                            <form action="/hvac/" method="post"> 
+                              {% csrf_token %}
+                              {{ form }}
+                              <input type="text" id="sa_temp" name="sa_temp">
+                              <input type="submit" value="Submit">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>OaDprPos</td>
+                          <td>{{ oadpr_pos }}</td>
+                          <td>
+                            <form action="/hvac/" method="post"> 
+                              {% csrf_token %}
+                              {{ form }}
+                              <input type="text" id="sa_temp" name="sa_temp">
+                              <input type="submit" value="Submit">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>SaFanSpd</td>
+                          <td>{{ safan_spd }}</td>
+                          <td>
+                            <form action="/hvac/" method="post"> 
+                              {% csrf_token %}
+                              {{ form }}
+                              <input type="text" id="sa_temp" name="sa_temp">
+                              <input type="submit" value="Submit">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>RaFanSpd</td>
+                          <td>{{ rafan_spd }}</td>
+                          <td>
+                            <form action="/hvac/" method="post"> 
+                              {% csrf_token %}
+                              {{ form }}
+                              <input type="text" id="sa_temp" name="sa_temp">
+                              <input type="submit" value="Submit">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>ClgCoilTemp</td>
+                          <td>{{ clgcoil_temp }}</td>
+                          <td>
+                            <form action="/hvac/" method="post"> 
+                              {% csrf_token %}
+                              {{ form }}
+                              <input type="text" id="sa_temp" name="sa_temp">
+                              <input type="submit" value="Submit">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>HtgCoilTemp</td>
+                          <td>{{ htgcoil_temp }}</td>
+                          <td>
+                            <form action="/hvac/" method="post"> 
+                              {% csrf_token %}
+                              {{ form }}
+                              <input type="text" id="sa_temp" name="sa_temp">
+                              <input type="submit" value="Submit">
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+        </section>
+    </div>
+</body>
+
+</html>
