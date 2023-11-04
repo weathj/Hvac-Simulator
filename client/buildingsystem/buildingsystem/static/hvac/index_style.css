@@ -1,0 +1,86 @@
+/* Reset some default padding and margin values */
+body, h1, h2, ul, p {
+    margin: 0;
+    padding: 0;
+}
+
+/* Set the background color of the page */
+body {
+    background-color: #D8D9DA;
+    font-family: 'K2D';
+}
+
+.navbar.top-navbar {
+    background-color: #FFF6E0;
+}
+
+.navbar.side-navbar {
+    background-color: #61677A;
+}
+
+.navbar.top-navbar .nav-link  {
+    color: #61677A;
+    font-size: medium;
+    font-family: 'K2D';
+    font-weight: bold;
+}
+
+.navbar.side-navbar .nav-link {
+    color: #FFF6E0 !important; /* !important is used to override the default bootstrap styling */
+    font-size: medium;
+    font-family: 'K2D';
+}
+
+/* Hover styles for top-navbar links */
+.navbar.top-navbar .navbar .nav-link:hover {
+    color: #FFF6E0 !important; /* Change color to side-navbar color on hover */
+    font-family: 'K2D', sans-serif !important; /* Change font to side-navbar font on hover */
+    background-color: #61677A !important;
+}
+
+/* Hover styles for side-navbar links */
+.navbar.side-navbar .navbar .nav-link:hover {
+    color: #272829 !important; /* Change color to top-navbar color on hover */
+    font-family: 'K2D', sans-serif !important; /* Change font to top-navbar font on hover */
+    background-color: #FFF6E0 !important;
+}
+
+nav ul {
+    list-style-type: none;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 10px;
+}
+
+/* Main content area styling */
+#main-content {
+    display: flex;
+}
+
+/* Left side panel styling */
+#left-panel {
+    background-color: #61677A;
+    width: 150px;
+    padding: 10px;
+}
+
+#left-panel ul {
+    list-style-type: none;
+}
+
+#left-panel a {
+    text-decoration: none;
+    color: #333;
+}
+
+#left-panel li {
+    margin-bottom: 15px;
+}
+
+/* Content display area styling */
+#content-display {
+    flex-grow: 1;
+    padding: 20px;
+} 
