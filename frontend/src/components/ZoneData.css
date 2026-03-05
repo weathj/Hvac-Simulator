@@ -1,0 +1,29 @@
+.zone-grid {
+    display: flex;
+    flex-direction: column;
+    gap:     14px;
+}
+
+.zone-chart-area {
+    margin-top:    8px;
+    height:        160px;
+    border:        1px dashed #21262d;
+    border-radius: 3px;
+}
+
+.zone-chart-label {
+    color:          #3b434d;
+    font-size:      0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.zone-empty {
+    color:          #3b434d;
+    font-size:      0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top:     40px;
+    text-align:     center;
+}
