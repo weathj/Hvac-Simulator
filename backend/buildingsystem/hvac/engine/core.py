@@ -11,8 +11,7 @@ class Air:
         self.time_step = 60  # seconds
 
     def calculate_btu(self, target_temp):
-        max_temp_change = abs(target_temp - self.temp) #Temperatures will not exceed more than the maximum temperature between the two
-
+        max_temp_change = abs(target_temp - self.temp)
         mass_flow = self.cfm * self.density
 
         # Limit the temperature change based on a realistic rate
@@ -295,7 +294,7 @@ class AirUnit:
             zone_btu = zone_object.air.calculate_btu(zone_object.vav.sa.temp)
             print("Zone BTU:", zone_btu)
 
-            zone_object.set_temp(zone_btu / (zone_object.air.density * zone_object.air.specific_heat * 1000), self.ahu_runtime)
+            zone_object.air.update_temp(zone_btu / (zone_object.air.density * zone_object.air.specific_heat * 1000))
             print("Zone Temp:", zone_object.air.temp)
             zone_temps.append(zone_object.air.temp)
 

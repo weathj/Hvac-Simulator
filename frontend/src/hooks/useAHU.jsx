@@ -5,7 +5,7 @@ export function useAHU() {
     const [ loading, setLoading ] = useState(null);
     const [ error, setError ] = useState(null);
 
-    const url = "http://127.0.0.1:8000/hvac/api/airunit/"
+    const url = "http://localhost:8000/hvac/api/airunit/"
 
     useEffect(() => {
         let cancelled = false;

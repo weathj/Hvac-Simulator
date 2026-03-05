@@ -5,7 +5,7 @@ export function useZones(zone_num) {
     const [loading, setLoading] = useState(null)
     const [error,   setError]   = useState(null)
 
-    const url = `http://127.0.0.1:8000/hvac/api/`
+    const url = `http://localhost:8000/hvac/api/`
 
     async function PostData(zone_id, point_name, data){
         const options = {
