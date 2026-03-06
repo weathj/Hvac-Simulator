@@ -11,7 +11,7 @@ class TrendLog():
         self.type = type
         self.interval = 15
         self.intervalsRemaining = self.interval
-        self.buffer_size = 15
+        self.buffer_size = 50
         self.trend_dict = {}
         self.event_bus = event_bus
         self.event_bus.subscribe("time", self.Trigger)
@@ -32,7 +32,6 @@ class TrendLog():
 
     def UpdateValue(self, data):
         zone_states, airunit_state = data
-        print(self.type)
         
         if(self.type == TrendType.AIRUNIT):
             if self.point in airunit_state:
@@ -50,7 +49,6 @@ class TrendLog():
 
         if len(self.trend_dict) > self.buffer_size:
             trends_to_remove = len(self.trend_dict) - self.buffer_size
-            print("Buffer full, deleting trend")
             if trends_to_remove > 1:
                 for x in range(trends_to_remove - 1):
                     try:

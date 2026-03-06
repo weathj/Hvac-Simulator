@@ -83,6 +83,45 @@
 }
 
 
+.adjust-row {
+    border-bottom: 1px solid #21262d;
+}
+
+.adjust-row:last-child {
+    border-bottom: none;
+}
+
+.adjust-row .stat-row {
+    border-bottom: none;
+    padding-bottom: 6px;
+}
+
+.adjust-buttons {
+    display:         flex;
+    gap:             6px;
+    padding-bottom:  6px;
+}
+
+.adjust-buttons button {
+    background:    #0d1117;
+    border:        1px solid #21262d;
+    border-radius: 4px;
+    color:         #39d353;
+    font-size:     0.85rem;
+    font-weight:   700;
+    width:         50%;
+    height:        22px;
+    cursor:        pointer;
+    display:       flex;
+    align-items:   center;
+    justify-content: center;
+}
+
+.adjust-buttons button:hover {
+    background:  #0c2340;
+    border-color: #39d353;
+}
+
 .fault-banner {
     background:    #200d0d;
     border:        1px solid #f85149;

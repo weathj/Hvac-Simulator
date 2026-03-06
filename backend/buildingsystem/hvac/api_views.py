@@ -13,7 +13,7 @@ class AirUnitValuesView(APIView):
     
     def post(self, request):
         airunit = AirUnit.objects.get(pk=1)
-        serializer = AirUnitSerializer(airunit, data=request.data)
+        serializer = AirUnitSerializer(airunit, data=request.data, partial=True)
         print(request.data)
         if serializer.is_valid():
             serializer.save()

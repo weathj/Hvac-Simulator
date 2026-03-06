@@ -29,9 +29,6 @@ class Air:
         # Convert to BTU per time_step
         btu = btu_per_hour * (self.time_step / 3600)
 
-        print(f"Temp Change: {actual_temp_change:.2f}°F")
-        print(f"BTU: {btu:.2f}")
-
         self.btu = btu
 
         return btu
@@ -42,7 +39,6 @@ class Air:
             return 
         temp_change = btu / (self.density * self.cfm * self.specific_heat * (self.time_step / 60))
         self.temp += temp_change
-        print(f"New Temp: {self.temp:.2f}°F")
     
     def set_btu(self, btu):
         self.btu = btu
@@ -84,7 +80,7 @@ class VAV:
         self.damper = Damper()
         self.fan = None
         self.sa = Air()
-        self.heating_coil = Coil()
+        self.heating_coil = None
 
 
 
@@ -116,6 +112,7 @@ class Fan:
         self.speed = 0.0  # 0-100 Percentage
         self.cfm = 0.0
         self.max_cfm = max_cfm
+        self.physical_max_cfm = max_cfm
         self.min_cfm = min_cfm
         self.min_speed = 20 #%
         self.fan_sts = False
@@ -126,6 +123,9 @@ class Fan:
         self.speed = max(0, min(100, speed))
         self.cfm = self.min_cfm + (self.speed / 100) * (self.max_cfm - self.min_cfm)
         return self.cfm * (self.time_step / 60)  # Return CFM for the given time step
+    
+    def set_incoming_cfm(self, incoming_cfm):
+        self.max_cfm = min(incoming_cfm, self.physical_max_cfm)
 
     def startup(self):
         self.fan_sts = True
@@ -184,7 +184,7 @@ class AirUnit:
         self.unit_sts = False
 
         self.sa = sa if sa is not None else Air()
-        self.supply_fan = supply_fan if supply_fan is not None else Fan(200, 800)
+        self.supply_fan = supply_fan if supply_fan is not None else Fan(40000, 8000)
         self.supply_air_flow = None
         self.cooling_coil = cooling_coil if cooling_coil is not None else Coil(5, 5)
         self.heating_coil = heating_coil if heating_coil is not None else Coil(5, 5)
@@ -193,7 +193,7 @@ class AirUnit:
 
         self.ra = ra if ra is not None else Air()
         self.return_air_flow = None
-        self.return_fan = return_fan if return_fan is not None else Fan(200, 10000)
+        self.return_fan = return_fan if return_fan is not None else Fan(40000, 8000)
         self.ma_damper = ma_damper if ma_damper is not None else Damper()
         self.ea_damper = ea_damper if ea_damper is not None else Damper()
 
@@ -215,11 +215,13 @@ class AirUnit:
         self.supply_fan.startup()
         self.return_fan.startup()
 
+        self.cooling_coil.temp = 65
+        self.heating_coil.temp = 65
+
         self.ma_damper.set_position(20)
 
         self.oa_damper.set_position(80)
         self.ea_damper.set_position(80)
-
         return self.unit_sts
 
     def shutdown(self):
@@ -232,25 +234,32 @@ class AirUnit:
             return self.__dict__()
 
         # Calculate air flows
+        # Dampers determine max available flow using fan physical capacity
+        oa_max = self.oa_damper.get_cfm(self.supply_fan.physical_max_cfm)
+        ra_available = self.return_fan.physical_max_cfm * (1 - self.ea_damper.position / 100)
+        ra_max = self.ma_damper.get_cfm(ra_available)
+
+        # Fan effective range is limited by what dampers allow
+        self.supply_fan.set_incoming_cfm(oa_max + ra_max)
+        self.return_fan.set_incoming_cfm(ra_max)
+
+        # Fan speed determines actual CFM within that range
         self.supply_fan.set_speed(self.supply_fan.speed)
         self.return_fan.set_speed(self.return_fan.speed)
-        
+
         supply_cfm = self.supply_fan.get_cfm()
-        print("Supply CFM:", supply_cfm)
-        self.supply_air_flow = supply_cfm
         return_cfm = self.return_fan.get_cfm()
-        print("Return CFM:", return_cfm)
+        self.supply_air_flow = supply_cfm
         self.return_air_flow = return_cfm
-        
-        self.oa.cfm = self.oa_damper.get_cfm(supply_cfm)
+            
+
+        # Distribute actual CFM proportionally through OA/RA
+        ma_max = oa_max + ra_max
+        self.oa.cfm = supply_cfm * (oa_max / ma_max) if ma_max else 0
+        self.ra.cfm = supply_cfm - self.oa.cfm
         self.outdoor_air_flow = self.oa.cfm
-        print("Calculated OA CFM:", self.oa.cfm)
-        self.ra.cfm = self.ma_damper.get_cfm(return_cfm)
-        print("Calculated RA CFM:", self.ra.cfm)
         self.ma.cfm = self.oa.cfm + self.ra.cfm
-        print("Calculated MA CFM:", self.ma.cfm)
         self.sa.cfm = self.ma.cfm
-        print("Calculated SA CFM:", self.sa.cfm)
 
         # Check for airflow as we would in real life
         if self.supply_fan.cfm == 0 or self.return_fan.cfm == 0:
@@ -260,43 +269,38 @@ class AirUnit:
             return self.__dict__()
         
         self.ma.temp = (self.oa.temp * self.oa.cfm + self.ra.temp * self.ra.cfm) / self.ma.cfm
-        print("Mixed Air Temp:", self.ma.temp)
 
         # Calculate cooling and heating effects
         cooling_btu = self.ma.calculate_btu(self.cooling_coil.temp)
         self.ma.update_temp(cooling_btu)
-        print("Cooling BTU:", cooling_btu)
         heating_btu = self.ma.calculate_btu(self.heating_coil.temp)
         self.ma.update_temp(heating_btu)
-        print("Heating BTU:", heating_btu)
-        
+
         net_btu = cooling_btu + heating_btu
-        print("Net BTU:", net_btu)
-        
-        self.sa.temp = self.ma.temp + (net_btu / (self.sa.cfm * self.sa.density * self.sa.specific_heat))
-        print("Supply Air Temp:", self.sa.temp)
+        self.sa.btu = net_btu
+        self.ma.btu = net_btu
+        self.oa.btu = net_btu * (self.oa.cfm / self.ma.cfm) if self.ma.cfm else 0
+
+        self.sa.temp = self.ma.temp
 
         zone_temps  = []
         zone_states = {}
 
         for zone_id, zone_object in zones.items():
             zone_object.vav.sa.cfm = zone_object.vav.damper.get_cfm(self.supply_air_flow)
+            zone_object.vav.sa.temp = self.sa.temp
 
             if zone_object.vav.heating_coil:
                 vav_reheat_btu = zone_object.vav.sa.calculate_btu(zone_object.vav.heating_coil.temp)
                 zone_object.vav.sa.update_temp(vav_reheat_btu)
 
-            print("Zone VAV CFM:", zone_object.vav.sa.cfm)
-            zone_object.vav.sa.update_temp(self.sa.btu)
-
             zone_object.air.cfm = zone_object.vav.sa.cfm
 
             zone_btu = zone_object.air.calculate_btu(zone_object.vav.sa.temp)
-            print("Zone BTU:", zone_btu)
 
             zone_object.air.update_temp(zone_btu / (zone_object.air.density * zone_object.air.specific_heat * 1000))
-            print("Zone Temp:", zone_object.air.temp)
             zone_temps.append(zone_object.air.temp)
+        
 
             zone_states[zone_id] = {
                 "air_temp": zone_object.air.temp,
@@ -309,6 +313,9 @@ class AirUnit:
                 "volume" : zone_object.volume,
                 "trend_logs" : {k: v.Save() for k, v in zone_object.trend_logs.items()}
             }
+        
+        
+        self.ra.temp = sum(zone_temps) / len(zone_temps)
 
         
         airunit_state = {
@@ -322,6 +329,7 @@ class AirUnit:
             "ma_temp": self.ma.temp,
             "ma_humidity": self.ma.humidity,
             "ma_btu": self.ma.btu,
+            "ma_flow": self.ma.cfm,
             "ra_temp": self.ra.temp,
             "ra_fan_speed": self.return_fan.speed,
             "ra_flow": self.return_air_flow,
@@ -333,8 +341,6 @@ class AirUnit:
             "oa_damper_position": self.oa_damper.position,
             "outdoor_air_flow": self.outdoor_air_flow,
         }
-
-        self.ra.temp = sum(zone_temps) / len(zone_temps)
 
         return zone_states, airunit_state
     
@@ -378,30 +384,3 @@ class Building:
 
     def set_unoccupied(self):
         self.occupied = False
-
-    def set_ahu(self, ahu):
-        self.ahu = ahu
-
-    def get_temp(self, air):
-        return air.temp
-
-    def set_temp(self, air, temp):
-        air.temp = temp
-
-    def get_damper_position(self, damper):
-        return damper.get_position()
-
-    def set_damper_position(self, damper, position):
-        damper.set_position(position)
-
-    def get_fan_speed(self, fan):
-        return fan.get_speed()
-
-    def set_fan_speed(self, fan, speed):
-        fan.set_speed(speed)
-
-    def get_coil_temp(self, coil):
-        return coil.temp
-
-    def set_coil_temp(self, coil, temp):
-        coil.temp = temp

@@ -7,6 +7,19 @@ export function useAHU() {
 
     const url = "http://localhost:8000/hvac/api/airunit/"
 
+    async function PostData(point_name, data){
+        const options = {
+            method: "POST",
+            headers: { "Content-Type" : "application/json"},
+            body: JSON.stringify({ [point_name] : data })
+        }
+
+        const response = await fetch(`${url}`, options)
+        if (!response.ok) throw new Error(
+            setError(response)
+        )
+    }
+
     useEffect(() => {
         let cancelled = false;
 
@@ -45,5 +58,5 @@ export function useAHU() {
     }
     }, [url]);
 
-    return { data, loading, error };
+    return { data, loading, error, PostData };
 }

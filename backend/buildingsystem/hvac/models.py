@@ -44,6 +44,8 @@ class AirUnit(models.Model):
 
     ma_temp = models.FloatField(default = 60) # °F
     ma_humidity = models.FloatField(default = 40) # %Rh
+    ma_btu = models.FloatField(default = 0) # btu/hr
+    ma_flow = models.FloatField(default = 0) # CFM
 
     ra_temp = models.FloatField(default = 72) # °F
     ra_fan_speed = models.FloatField(default = 100) # Speed %

@@ -1,32 +1,17 @@
 import { useState } from 'react'
+import { Panel, StatRow, AdjustRow, SliderRow } from './PanelComponents'
+import { useAHU } from '../hooks/useAHU'
 import AirUnitData from './AirUnitData'
 import ZoneData from './ZoneData'
 import './Dashboard.css'
 import './PanelComponents.css'
 
-function LocationCard() {
-    return (
-        <div className="panel">
-            <div className="panel-header panel-header--outside">
-                <div className="panel-dot" />
-                <span className="panel-title">Location</span>
-            </div>
-            <div className="panel-body">
-                <div className="stat-row">
-                    <span className="stat-label">Temperature</span>
-                    <span className="stat-value">80.0 °F</span>
-                </div>
-                <div className="stat-row">
-                    <span className="stat-label">Humidity</span>
-                    <span className="stat-value">40.0 % Rh</span>
-                </div>
-            </div>
-        </div>
-    )
-}
-
 export default function Dashboard() {
     const [page, setPage] = useState('data')
+    const { data, error } = useAHU()
+    const ahu = data?.[0]
+
+    if (error) return <div className="fault-banner">&#x26a0; FAULT &mdash; {error}</div>
 
     return (
         <div className="shell">
@@ -37,13 +22,16 @@ export default function Dashboard() {
                     <span className="shell-system-name">Building Automation System</span>
                 </div>
                 <div className="shell-header-right">
-                    <span className="shell-version">HVAC Simulator v0.1</span>
+                    <span className="shell-version">HVAC Simulator v1.0</span>
                 </div>
             </header>
 
             <div className="shell-body">
                 <div className="shell-sidebar">
-                    <LocationCard />
+                    <Panel title="Location" variant="outside">
+                        <StatRow label="Temperature"     value={ahu?.oa_temp}           unit=" °F"     decimals={2} />
+                        <StatRow label="Humidity"        value={ahu?.oa_humidity}       unit=" %"                   />
+                    </Panel>
                 </div>
 
                 <main className="shell-content">
