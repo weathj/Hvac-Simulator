@@ -47,7 +47,7 @@ export default function ZoneData() {
 
     return (
         <div className="zone-grid">
-            {data.map(zone => (
+            {[...data].sort((a, b) => a.id - b.id).map(zone => (
                 <ZoneCard key={zone.id} zone={zone} />
             ))}
         </div>
