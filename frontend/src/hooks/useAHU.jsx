@@ -5,7 +5,7 @@ export function useAHU() {
     const [ loading, setLoading ] = useState(null);
     const [ error, setError ] = useState(null);
 
-    const url = ` ${import.meta.env.VITE_API_URL }/hvac/api/airunit/`
+    const url = `${import.meta.env.VITE_API_URL}/hvac/api/airunit/`
 
     async function PostData(point_name, data){
         const options = {
