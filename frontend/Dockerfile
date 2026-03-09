@@ -1,9 +1,9 @@
 FROM node:lts-alpine
 WORKDIR /usr/src/app
 COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
-RUN npm install --silent && mv node_modules ../
+RUN npm install --silent
 COPY . .
-EXPOSE 5173
-RUN chown -R node /usr/src/app
-USER node
-CMD ["npm", "run", "dev", "--", "--host"]
+RUN npm run build
+EXPOSE 3000
+RUN npm install -g serve
+CMD ["serve", "dist", "-l", "3000"]
