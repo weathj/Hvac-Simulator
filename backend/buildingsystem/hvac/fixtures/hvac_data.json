@@ -1,0 +1,78 @@
+[
+  {
+    "model": "hvac.airunit",
+    "pk": 1,
+    "fields": {
+      "name": "AHU-1",
+      "sa_temp": 55.0,
+      "sa_humidity": 40.0,
+      "sa_btu": 0.0,
+      "sa_fan_speed": 100.0,
+      "sa_flow": 38000.0,
+      "cooling_coil_temp": 70.0,
+      "heating_coil_temp": 70.0,
+      "ma_temp": 60.0,
+      "ma_humidity": 40.0,
+      "ma_btu": 0.0,
+      "ma_flow": 0.0,
+      "ra_temp": 72.0,
+      "ra_fan_speed": 100.0,
+      "ra_flow": 38000.0,
+      "ma_damper_position": 0.0,
+      "ea_damper_position": 100.0,
+      "oa_temp": 80.0,
+      "oa_humidity": 40.0,
+      "oa_btu": 0.0,
+      "oa_damper_position": 100.0,
+      "outdoor_air_flow": 42000.0
+    }
+  },
+  {
+    "model": "hvac.zone",
+    "pk": 1,
+    "fields": {
+      "name": "Zone 1",
+      "air_temp": 72.0,
+      "setpoint": 72.0,
+      "vav_sa_temp": 60.0,
+      "vav_dpr_pos": 100.0,
+      "trend_logs": {},
+      "height": 10.0,
+      "width": 30.0,
+      "length": 40.0,
+      "volume": 12000.0
+    }
+  },
+  {
+    "model": "hvac.zone",
+    "pk": 2,
+    "fields": {
+      "name": "Zone 2",
+      "air_temp": 72.0,
+      "setpoint": 72.0,
+      "vav_sa_temp": 60.0,
+      "vav_dpr_pos": 100.0,
+      "trend_logs": {},
+      "height": 10.0,
+      "width": 30.0,
+      "length": 40.0,
+      "volume": 12000.0
+    }
+  },
+  {
+    "model": "hvac.zone",
+    "pk": 3,
+    "fields": {
+      "name": "Zone 3",
+      "air_temp": 72.0,
+      "setpoint": 72.0,
+      "vav_sa_temp": 60.0,
+      "vav_dpr_pos": 100.0,
+      "trend_logs": {},
+      "height": 10.0,
+      "width": 30.0,
+      "length": 40.0,
+      "volume": 12000.0
+    }
+  }
+]

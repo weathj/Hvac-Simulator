@@ -1,4 +1,33 @@
 services:
+  db:
+    image: postgres:15.17-trixie
+    environment:
+      POSTGRES_DB: hvac
+      POSTGRES_USER: hvac
+      POSTGRES_PASSWORD: hvac
+    ports:
+      - 5432:5432
+
+  backend:
+    image: backend
+    build:
+      context: backend
+      dockerfile: ./Dockerfile
+    environment:
+      DATABASE_URL: postgres://hvac:hvac@db:5432/hvac
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+
+  simulation:
+    image: backend
+    command: bash -c "cd /app/buildingsystem && python manage.py run-simulation"
+    environment:
+      DATABASE_URL: postgres://hvac:hvac@db:5432/hvac
+    depends_on:
+      - backend
+
   frontend:
     image: frontend
     build:
@@ -6,14 +35,6 @@ services:
       dockerfile: ./Dockerfile
     environment:
       NODE_ENV: dev
+      VITE_API_URL: http://localhost:8000
     ports:
       - 5173:5173
-  backend:
-    image: backend
-    build:
-      context: backend
-      dockerfile: ./Dockerfile
-    ports:
-      - 8000:8000
-    volumes:
-      - ./backend/buildingsystem/db.sqlite3:/app/buildingsystem/db.sqlite3

@@ -2,6 +2,6 @@ django==5.0.1
 gunicorn==21.2.0
 django-cors-headers==4.9.0
 djangorestframework==3.16.1
-psycopg2-binary==2.9.10
-dj-database-url==2.3.0
-whitenoise==6.9.0
+psycopg2-binary
+dj-database-url
+whitenoise

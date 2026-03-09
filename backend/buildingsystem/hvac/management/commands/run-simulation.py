@@ -18,7 +18,7 @@ class Command(BaseCommand):
         tick = 0
 
         # Single Air Handler for now
-        airunit_db = AirUnit.objects.get(pk=1)
+        airunit_db = AirUnit.objects.all()[0]
         air_unit = c.AirUnit()
 
         # Iterating through Zone objects to get two clean dictionaires keyed by id.
