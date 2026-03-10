@@ -2,9 +2,12 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.http import JsonResponse
+from django.views import View
 from .models import AirUnit, Zone, Air
 from .serializers import AirUnitSerializer, ZoneSerializer, AirSerializer
 from hvac.utils import session
+import json
 
 class AirUnitValuesView(APIView):
     def get(self, request):
@@ -55,10 +58,11 @@ class AirValuesView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors)
     
-class CreateView(APIView):
-    def post(self, request):
-        session_type = request.data.get('session-type')
+class CreateView(View):
+    async def post(self, request):
+        body = json.loads(request.body)
+        session_type = body.get('session-type')
         if session_type == 'new':
             session.manager.new_session()
-            return Response({'status': 'session created'})
-        return Response({'error': 'invalid session-type'}, status=400)
+            return JsonResponse({'status': 'session created'})
+        return JsonResponse({'error': 'invalid session-type'}, status=400)
