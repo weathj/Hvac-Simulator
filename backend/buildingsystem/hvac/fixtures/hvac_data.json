@@ -18,7 +18,7 @@
       "ra_temp": 72.0,
       "ra_fan_speed": 100.0,
       "ra_flow": 38000.0,
-      "ma_damper_position": 0.0,
+      "ra_damper_position": 0.0,
       "ea_damper_position": 100.0,
       "oa_temp": 80.0,
       "oa_humidity": 40.0,

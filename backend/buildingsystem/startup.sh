@@ -2,6 +2,7 @@
 
 set -eu
 
+python manage.py makemigrations
 python manage.py migrate
 python manage.py loaddata hvac_data
-gunicorn --bind 0.0.0.0:8000 server.wsgi
+uvicorn server.asgi:application --host 0.0.0.0 --port 8000

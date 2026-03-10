@@ -50,7 +50,7 @@ class AirUnit(models.Model):
     ra_temp = models.FloatField(default = 72) # °F
     ra_fan_speed = models.FloatField(default = 100) # Speed %
     ra_flow = models.FloatField(default=38000) # CFM
-    ma_damper_position = models.FloatField(default = 0) # Position open %
+    ra_damper_position = models.FloatField(default = 0) # Position open %
     ea_damper_position = models.FloatField(default = 100) # Position open %
 
     oa_temp = models.FloatField(default = 80) # °F

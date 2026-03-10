@@ -20,14 +20,6 @@ services:
     depends_on:
       - db
 
-  simulation:
-    image: backend
-    command: bash -c "cd /app/buildingsystem && python manage.py run-simulation"
-    environment:
-      DATABASE_URL: postgres://hvac:hvac@db:5432/hvac
-    depends_on:
-      - backend
-
   frontend:
     image: frontend
     build:

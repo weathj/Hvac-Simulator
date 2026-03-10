@@ -25,18 +25,19 @@ export default function AirUnitData() {
                     <StatRow label="Humidity"        value={ahu?.ma_humidity}         unit=" %"                   />
                     <StatRow label="BTU"             value={ahu?.ma_btu}              unit=" BTU/hr" decimals={2} />
                     <StatRow label="Flow"            value={ahu?.ma_flow}             unit=" CFM"                     />
-                    <SliderRow label="Damper Position" point_name="ma_damper_position" value={ahu?.ma_damper_position}  unit="%"                    />
                 </Panel>
 
                 <Panel title="Return Air" variant="return">
                     <StatRow label="Temperature" value={ahu?.ra_temp} unit=" °F"  decimals={2} />
                     <StatRow label="Flow"        value={ahu?.ra_flow} unit=" CFM"              />
                     <SliderRow label="Fan Speed"   point_name="ra_fan_speed" value={ahu?.ra_fan_speed} unit=" %"           />
+                    <SliderRow label="Damper Position" point_name="ra_damper_position" value={ahu?.ma_damper_position}  unit="%"                    />
                 </Panel>
                 
                 <Panel title="Exhaust Air" variant="exhaust">
                     <SliderRow label="Damper Position" point_name="ea_damper_position" value={ahu?.ea_damper_position} unit="%" />
                 </Panel>
+                
                 <Panel title="Outside Air" variant="outside">
                     <AdjustRow label="Temperature"   point_name="oa_temp" value={ahu?.oa_temp}           unit=" °F"     decimals={2} />
                     <StatRow label="Humidity"        value={ahu?.oa_humidity}       unit=" %"                   />

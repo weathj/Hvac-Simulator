@@ -1,3 +1,11 @@
+from enum import Enum
+
+class AirUnitState(Enum):
+    SHUTDOWN = "shutdown"
+    STARTUP = "startup"
+    HEATING = "heating"
+    COOLING = "cooling"
+
 class Air:
     def __init__(self, time_step=60):
         self.temp = 60.0
@@ -85,7 +93,7 @@ class VAV:
 
 
 class Zone:
-    def __init__(self, name, height, width, length):
+    def __init__(self, name, height = 10, width = 10, length = 10):
         self.name = name
         self.air = Air()
         self.vav = VAV()
@@ -175,13 +183,18 @@ class Coil:
     
     def get_temp(self):
         return self.temp
+    
+    def update_temp(self, air):
+        # Estimate temperature of coil based on air moving across
+        temp_change = air.btu / (air.density * air.heat_capacity * air.specific_heat)
+        self.temp += temp_change
 
 
 class AirUnit:
     def __init__(self, oa= None, sa=None, ma=None, ra=None, supply_fan=None, return_fan=None,
-                 ma_damper=None, ea_damper=None, oa_damper=None,
-                 cooling_coil=None, heating_coil=None, time_factor=1):
+                 ra_damper=None, ea_damper=None, oa_damper=None, cooling_coil=None, heating_coil=None, time_factor=1):
         self.unit_sts = False
+        self.state = AirUnitState.SHUTDOWN
 
         self.sa = sa if sa is not None else Air()
         self.supply_fan = supply_fan if supply_fan is not None else Fan(40000, 8000)
@@ -194,7 +207,7 @@ class AirUnit:
         self.ra = ra if ra is not None else Air()
         self.return_air_flow = None
         self.return_fan = return_fan if return_fan is not None else Fan(40000, 8000)
-        self.ma_damper = ma_damper if ma_damper is not None else Damper()
+        self.ra_damper = ra_damper if ra_damper is not None else Damper()
         self.ea_damper = ea_damper if ea_damper is not None else Damper()
 
         self.oa = oa if oa is not None else OutdoorAir()
@@ -210,6 +223,7 @@ class AirUnit:
 
     def startup(self):
         self.unit_sts = True
+        self.state = AirUnitState.STARTUP
 
         # Set air moving to allow Air Handler to turn on
         self.supply_fan.startup()
@@ -218,26 +232,30 @@ class AirUnit:
         self.cooling_coil.temp = 65
         self.heating_coil.temp = 65
 
-        self.ma_damper.set_position(20)
+        self.ra_damper.set_position(20)
 
         self.oa_damper.set_position(80)
         self.ea_damper.set_position(80)
+
+        self.state = AirUnitState.COOLING if self.oa.temp > 80 else AirUnitState.HEATING
+
         return self.unit_sts
 
     def shutdown(self):
         self.unit_sts = False
+        self.state = AirUnitState.SHUTDOWN
         return self.unit_sts
 
     # This is the key function, this is the air moving through the unit.
     def heat_cool(self, zones):
-        if not self.unit_sts:
+        if not self.unit_sts or self.state == AirUnitState.SHUTDOWN:
             return self.__dict__()
 
         # Calculate air flows
         # Dampers determine max available flow using fan physical capacity
         oa_max = self.oa_damper.get_cfm(self.supply_fan.physical_max_cfm)
         ra_available = self.return_fan.physical_max_cfm * (1 - self.ea_damper.position / 100)
-        ra_max = self.ma_damper.get_cfm(ra_available)
+        ra_max = self.ra_damper.get_cfm(ra_available)
 
         # Fan effective range is limited by what dampers allow
         self.supply_fan.set_incoming_cfm(oa_max + ra_max)
@@ -251,7 +269,6 @@ class AirUnit:
         return_cfm = self.return_fan.get_cfm()
         self.supply_air_flow = supply_cfm
         self.return_air_flow = return_cfm
-            
 
         # Distribute actual CFM proportionally through OA/RA
         ma_max = oa_max + ra_max
@@ -270,18 +287,21 @@ class AirUnit:
         
         self.ma.temp = (self.oa.temp * self.oa.cfm + self.ra.temp * self.ra.cfm) / self.ma.cfm
 
+        cooling_btu, heating_btu = 0
+
         # Calculate cooling and heating effects
-        cooling_btu = self.ma.calculate_btu(self.cooling_coil.temp)
-        self.ma.update_temp(cooling_btu)
-        heating_btu = self.ma.calculate_btu(self.heating_coil.temp)
-        self.ma.update_temp(heating_btu)
+        if self.state == AirUnitState.COOLING:
+            cooling_btu = self.ma.calculate_btu(self.cooling_coil.temp)
+            self.sa.update_temp(cooling_btu)
+            self.heating_coil.update_temp(self.ma.air)
+
+        if self.state == AirUnitState.HEATING:
+            heating_btu = self.ma.calculate_btu(self.heating_coil.temp)
+            self.sa.update_temp(heating_btu)
+            self.cooling_coil.update_temp(self.sa.air) # Need to apply already heated air since cooling coil is past the heating coil
 
         net_btu = cooling_btu + heating_btu
         self.sa.btu = net_btu
-        self.ma.btu = net_btu
-        self.oa.btu = net_btu * (self.oa.cfm / self.ma.cfm) if self.ma.cfm else 0
-
-        self.sa.temp = self.ma.temp
 
         zone_temps  = []
         zone_states = {}
@@ -333,7 +353,7 @@ class AirUnit:
             "ra_temp": self.ra.temp,
             "ra_fan_speed": self.return_fan.speed,
             "ra_flow": self.return_air_flow,
-            "ma_damper_position": self.ma_damper.position,
+            "ra_damper_position": self.ra_damper.position,
             "ea_damper_position": self.ea_damper.position,
             "oa_temp": self.oa.temp,
             "oa_humidity": self.oa.humidity,
@@ -359,7 +379,7 @@ class AirUnit:
             "ra_temp": self.ra.temp,
             "ra_fan_speed": self.return_fan.speed,
             "ra_flow": self.return_air_flow,
-            "ma_damper_position": self.ma_damper.position,
+            "ra_damper_position": self.ra_damper.position,
             "ea_damper_position": self.ea_damper.position,
             "oa_temp": self.oa.temp,
             "oa_humidity": self.oa.humidity,
@@ -367,20 +387,3 @@ class AirUnit:
             "oa_damper_position": self.oa_damper.position,
             "outdoor_air_flow": self.outdoor_air_flow,
         }
-
-
-class Building:
-    def __init__(self, ahu):
-        self.occupied = False
-        self.zones = []
-        self.oa = Air()
-        self.ahu = ahu
-
-    def add_zone(self, zone):
-        self.zones.append(zone)
-
-    def set_occupied(self, occupied):
-        self.occupied = occupied
-
-    def set_unoccupied(self):
-        self.occupied = False

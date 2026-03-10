@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import AirUnit, Zone, Air
 from .serializers import AirUnitSerializer, ZoneSerializer, AirSerializer
+from hvac.utils import session
 
 class AirUnitValuesView(APIView):
     def get(self, request):
@@ -54,3 +55,10 @@ class AirValuesView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors)
     
+class CreateView(APIView):
+    def post(self, request):
+        session_type = request.data.get('session-type')
+        if session_type == 'new':
+            session.manager.new_session()
+            return Response({'status': 'session created'})
+        return Response({'error': 'invalid session-type'}, status=400)
