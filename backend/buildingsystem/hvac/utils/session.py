@@ -15,7 +15,7 @@ class Session:
         self.sim = None
 
     async def start_session(self):
-        self.start_time = datetime.datetime.datetime.now()
+        self.start_time = datetime.datetime.now()
         self.sim = simulation.Simulation(self.id)
         await self.sim.calculate()
 

@@ -9,7 +9,6 @@ import './PanelComponents.css'
 export default function Dashboard() {
     const [page, setPage] = useState('data')
     const { data, error } = useAHU()
-    const { PostData } = useAHU()
     const ahu = data?.[0]
 
     if (error) return <div className="fault-banner">&#x26a0; FAULT &mdash; {error}</div>
