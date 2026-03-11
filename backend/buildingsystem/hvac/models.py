@@ -33,6 +33,7 @@ class Coil(models.Model):
     temp = models.FloatField(default=70)
 
 class AirUnit(models.Model):
+    session_id = models.IntegerField(default=0) # 0 indicates no session id
     name = models.CharField(max_length=100, default="Empty")
     sa_temp = models.FloatField(default = 55) # °F
     sa_humidity = models.FloatField(default = 40) # %Rh
@@ -61,6 +62,7 @@ class AirUnit(models.Model):
 
 
 class Zone(models.Model):
+    session_id = models.IntegerField(default=0) # 0 indicates no session id
     name = models.CharField(max_length=100, default="Empty")
     air_temp = models.FloatField(default=60) # °F
     setpoint = models.FloatField(default=65) # °F

@@ -4,32 +4,44 @@ from hvac.engine import events
 from hvac.engine import trends
 from hvac.engine.trends import TrendType
 from hvac.utils import dbsaver
+import datetime
 import json
 import time
 
 class Simulation:
-    def __init__(self, session_id):
+    def __init__(self, session_id, zones = 3):
         self.session_id = session_id
+        self.zones = zones
 
     def calculate(self):
         bus = events.EventBus()
         tick = 0
 
         # Create Air Handler Objects
-        airunit_db = None
+        airunit_db = AirUnit.objects.create(
+            session_id = self.session_id
+        )
         air_unit = c.AirUnit()
 
         # Iterating through Zone objects to get two clean dictionaires keyed by id.
         # zones = Class Instances, zones_db = Database objects
         zones = {}
-        zones_db   = {}
-        for zone in Zone.objects.all():
-            zones[zone.id] = c.Zone(zone.name, zone.height, zone.width, zone.length)
-            zones[zone.id].startup()
-            zones[zone.id].trend_logs["zone_temp"] = trends.TrendLog("air_temp", trends.TrendType.ZONE, bus)
-            zones[zone.id].trend_logs["zone_sa_temp"] = trends.TrendLog("vav_sa_temp", trends.TrendType.ZONE, bus)
-            zones_db[zone.id] = zone        
-            
+        zones_db   = {}   
+
+        for zone in range(self.zones):
+            zone_obj = c.Zone(self.session_id, f'Zone-{zone}')
+            zones[zone] = zone_obj
+            zones_db[zone] = Zone.objects.create(
+                session_id = self.session_id,
+                name = f'Zone-{zone}',
+                height = zone_obj.height,
+                width = zone_obj.width,
+                length = zone_obj.length
+            )
+
+            zones[zone].startup()
+            zones[zone].trend_logs["zone_temp"] = trends.TrendLog("air_temp", trends.TrendType.ZONE, bus)
+            zones[zone].trend_logs["zone_sa_temp"] = trends.TrendLog("vav_sa_temp", trends.TrendType.ZONE, bus)
 
         # Dynamically write database changes to keep sim loop decoupled from logic
         db = dbsaver.DBSaver(zones_db, airunit_db)
@@ -70,6 +82,7 @@ class Simulation:
                 zone_obj.vav_sa_temp = zones_db[zone_id].vav_sa_temp
 
             zone_states, airunit_state = air_unit.heat_cool(zones)
+
             bus.publish('state_updated', [zone_states, airunit_state])
             bus.publish('time', tick)
             tick += 0.5

@@ -93,7 +93,8 @@ class VAV:
 
 
 class Zone:
-    def __init__(self, name, height = 10, width = 10, length = 10):
+    def __init__(self, session_id, name, height = 10, width = 10, length = 10):
+        self.session_id = session_id
         self.name = name
         self.air = Air()
         self.vav = VAV()
@@ -191,8 +192,9 @@ class Coil:
 
 
 class AirUnit:
-    def __init__(self, oa= None, sa=None, ma=None, ra=None, supply_fan=None, return_fan=None,
+    def __init__(self, session_id, oa= None, sa=None, ma=None, ra=None, supply_fan=None, return_fan=None,
                  ra_damper=None, ea_damper=None, oa_damper=None, cooling_coil=None, heating_coil=None, time_factor=1):
+        self.session_id = session_id
         self.unit_sts = False
         self.state = AirUnitState.SHUTDOWN
 
