@@ -4,6 +4,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.http import JsonResponse
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .models import AirUnit, Zone, Air
 from .serializers import AirUnitSerializer, ZoneSerializer, AirSerializer
 from hvac.utils import session
@@ -58,6 +60,7 @@ class AirValuesView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors)
     
+@method_decorator(csrf_exempt, name='dispatch')
 class CreateView(View):
     async def post(self, request):
         body = json.loads(request.body)
