@@ -17,7 +17,7 @@ class Session:
     async def start_session(self):
         self.start_time = datetime.datetime.now()
         self.sim = simulation.Simulation(self.id)
-        await self.sim.calculate()
+        await asyncio.to_thread(self.sim.calculate)
 
     def update_session_time(self):
         self.max_length = self.start_time - datetime.datetime.now()

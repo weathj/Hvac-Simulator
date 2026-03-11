@@ -5,13 +5,13 @@ from hvac.engine import trends
 from hvac.engine.trends import TrendType
 from hvac.utils import dbsaver
 import json
-import asyncio
+import time
 
 class Simulation:
     def __init__(self, session_id):
         self.session_id = session_id
 
-    async def calculate(self):
+    def calculate(self):
         bus = events.EventBus()
         tick = 0
 
@@ -72,6 +72,6 @@ class Simulation:
             zone_states, airunit_state = air_unit.heat_cool(zones)
             bus.publish('state_updated', [zone_states, airunit_state])
             bus.publish('time', tick)
-            tick += 1
-            await asyncio.sleep(0.5)
+            tick += 0.5
+            time.sleep(0.5)
         
