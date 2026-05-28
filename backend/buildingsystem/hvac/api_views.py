@@ -12,13 +12,13 @@ from hvac.utils import session
 import json
 
 class AirUnitValuesView(APIView):
-    def get(self, request, pk):
-        airunit = AirUnit.objects.filter(session_id=pk)
+    def get(self, request, session_id):
+        airunit = AirUnit.objects.filter(session_id=session_id)
         serializer = AirUnitSerializer(airunit, many=True)
         return Response(serializer.data)
     
-    def post(self, request):
-        airunit = AirUnit.objects.get(pk=1)
+    def post(self, request, session_id):
+        airunit = AirUnit.objects.filter(session_id=session_id)
         serializer = AirUnitSerializer(airunit, data=request.data, partial=True)
         print(request.data)
         if serializer.is_valid():
@@ -27,13 +27,15 @@ class AirUnitValuesView(APIView):
         return Response(serializer.errors)
     
 class ZoneValuesView(APIView):
-    def get(self, request, pk):
-        zone = Zone.objects.get(pk=pk)
+    def get(self, request, session_id, pk):
+        zones = Zone.objects.filter(session_id=session_id).all()
+        zone = zones.get(pk=pk)
         serializer = ZoneSerializer(zone)
         return Response(serializer.data)
     
-    def post(self, request, pk):
-        zone = Zone.objects.get(pk=pk)
+    def post(self, request, session_id, pk):
+        zones = Zone.objects.filter(session_id=session_id).all()
+        zone = zones.get(pk=pk)
         serializer = ZoneSerializer(zone, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -41,19 +43,19 @@ class ZoneValuesView(APIView):
         return Response(serializer.errors)
     
 class AllZoneValuesView(APIView):
-    def get(self, request):
-        zones = Zone.objects.all()
+    def get(self, request, session_id):
+        zones = Zone.objects.filter(session_id=session_id).all()
         serializer = ZoneSerializer(zones, many=True)
         return Response(serializer.data)
     
 class AirValuesView(APIView):
-    def get(self, request, pk):
-        air = Air.objects.get(pk=pk)
+    def get(self, request, session_id):
+        air = Air.objects.filter(session_id=session_id)
         serializer = AirSerializer(air, many=False)
         return Response(serializer.data)
     
-    def post(self, request, pk):
-        air = Air.objects.get(pk=pk)
+    def post(self, request, session_id):
+        air = Air.objects.filter(session_id=session_id)
         serializer = AirSerializer(air, data=request.data, many=False)
         if serializer.is_valid():
             serializer.save()

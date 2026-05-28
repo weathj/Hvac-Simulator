@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
+import { useSessionContext } from '../context/SessionContext';
 
 export function useZones(zone_num) {
+    const { session_id } = useSessionContext()
     const [data,    setData]    = useState(null)
     const [loading, setLoading] = useState(null)
     const [error,   setError]   = useState(null)
 
-    const url = `${import.meta.env.VITE_API_URL}/hvac/api/`
+    const url = `${import.meta.env.VITE_API_URL}/hvac/api/${session_id}/`
 
     async function PostData(zone_id, point_name, data){
         const options = {
