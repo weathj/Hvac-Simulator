@@ -187,8 +187,8 @@ class Coil:
     
     def update_temp(self, air):
         # Estimate temperature of coil based on air moving across
-        temp_change = air.btu / (air.density * air.heat_capacity * air.specific_heat)
-        self.temp += temp_change
+        # coil slowly equilibrates to passing air temp
+        self.temp += (air.temp - self.temp) * 0.01
 
 
 class AirUnit:
@@ -289,18 +289,18 @@ class AirUnit:
         
         self.ma.temp = (self.oa.temp * self.oa.cfm + self.ra.temp * self.ra.cfm) / self.ma.cfm
 
-        cooling_btu, heating_btu = 0
+        cooling_btu, heating_btu = 0, 0
 
         # Calculate cooling and heating effects
         if self.state == AirUnitState.COOLING:
             cooling_btu = self.ma.calculate_btu(self.cooling_coil.temp)
             self.sa.update_temp(cooling_btu)
-            self.heating_coil.update_temp(self.ma.air)
+            self.heating_coil.update_temp(self.ma.temp)
 
         if self.state == AirUnitState.HEATING:
             heating_btu = self.ma.calculate_btu(self.heating_coil.temp)
             self.sa.update_temp(heating_btu)
-            self.cooling_coil.update_temp(self.sa.air) # Need to apply already heated air since cooling coil is past the heating coil
+            self.cooling_coil.update_temp(self.sa) # Need to apply already heated air since cooling coil is past the heating coil
 
         net_btu = cooling_btu + heating_btu
         self.sa.btu = net_btu

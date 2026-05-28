@@ -3,9 +3,8 @@ from hvac.engine import core as c
 from hvac.engine import events
 from hvac.engine import trends
 from hvac.engine.trends import TrendType
-from hvac.utils import dbsaver
-import datetime
-import json
+from hvac.utils import dbsaver, logger
+import os
 import time
 
 class Simulation:
@@ -17,16 +16,18 @@ class Simulation:
         bus = events.EventBus()
         tick = 0
 
+        ahu_log = logger.Logger(os.path.join(os.path.dirname(__file__), 'logs', 'ahu_log.csv'))
+
         # Create Air Handler Objects
         airunit_db = AirUnit.objects.create(
             session_id = self.session_id
         )
-        air_unit = c.AirUnit()
+        air_unit = c.AirUnit(self.session_id)
 
         # Iterating through Zone objects to get two clean dictionaires keyed by id.
         # zones = Class Instances, zones_db = Database objects
         zones = {}
-        zones_db   = {}   
+        zones_db   = {} 
 
         for zone in range(self.zones):
             zone_obj = c.Zone(self.session_id, f'Zone-{zone}')
@@ -66,6 +67,7 @@ class Simulation:
             
         while air_unit.unit_sts:
             # Pulling write values back from database before heat_cool to catch any changes from frontend.
+            print("Updating values")
             airunit_db.refresh_from_db()
             air_unit.cooling_coil.temp = airunit_db.cooling_coil_temp
             air_unit.heating_coil.temp = airunit_db.heating_coil_temp
@@ -83,6 +85,11 @@ class Simulation:
 
             zone_states, airunit_state = air_unit.heat_cool(zones)
 
+            log_dict = air_unit.__dict__()
+            log_dict["id"] = f"airunit-{air_unit.session_id}"
+            ahu_log.log_row(log_dict)
+
+            ahu_log.commit()
             bus.publish('state_updated', [zone_states, airunit_state])
             bus.publish('time', tick)
             tick += 0.5

@@ -5,3 +5,4 @@ djangorestframework==3.16.1
 psycopg2-binary
 dj-database-url
 whitenoise
+pandas==3.0

@@ -12,8 +12,8 @@ from hvac.utils import session
 import json
 
 class AirUnitValuesView(APIView):
-    def get(self, request):
-        airunit = AirUnit.objects.all()
+    def get(self, request, pk):
+        airunit = AirUnit.objects.filter(session_id=pk)
         serializer = AirUnitSerializer(airunit, many=True)
         return Response(serializer.data)
     
@@ -62,10 +62,20 @@ class AirValuesView(APIView):
     
 @method_decorator(csrf_exempt, name='dispatch')
 class CreateView(View):
+    async def get(self, request):
+        session_id = request.GET.get('session_id')
+        if session_id is None:
+            sessions = [s.to_dict() for s in session.manager.active_sessions.values()]
+            return JsonResponse({"sessions": sessions})
+        s = session.manager.active_sessions.get(int(session_id))
+        if s is None:
+            return JsonResponse({'error': 'session not found'}, status=404)
+        return JsonResponse(s.to_dict())
+
     async def post(self, request):
         body = json.loads(request.body)
         session_type = body.get('session-type')
         if session_type == 'new':
-            session.manager.new_session()
-            return JsonResponse({'status': 'session created'})
+            s = session.manager.new_session()
+            return JsonResponse(s.to_dict())
         return JsonResponse({'error': 'invalid session-type'}, status=400)
