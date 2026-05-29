@@ -227,20 +227,17 @@ class AirUnit:
         self.unit_sts = True
         self.state = AirUnitState.STARTUP
 
-        # Set air moving to allow Air Handler to turn on
         self.supply_fan.startup()
         self.return_fan.startup()
 
-        self.cooling_coil.temp = 65
-        self.heating_coil.temp = 65
+        self.cooling_coil.temp = 55   # chilled water setpoint °F
+        self.heating_coil.temp = 90   # hot water setpoint °F
 
         self.ra_damper.set_position(20)
-
         self.oa_damper.set_position(80)
         self.ea_damper.set_position(80)
 
-        self.state = AirUnitState.COOLING if self.oa.temp > 80 else AirUnitState.HEATING
-
+        self.state = AirUnitState.COOLING
         return self.unit_sts
 
     def shutdown(self):
@@ -248,120 +245,115 @@ class AirUnit:
         self.state = AirUnitState.SHUTDOWN
         return self.unit_sts
 
-    # This is the key function, this is the air moving through the unit.
     def heat_cool(self, zones):
         if not self.unit_sts or self.state == AirUnitState.SHUTDOWN:
-            return self.__dict__()
+            return {}, {}
 
-        # Calculate air flows
-        # Dampers determine max available flow using fan physical capacity
-        oa_max = self.oa_damper.get_cfm(self.supply_fan.physical_max_cfm)
-        ra_available = self.return_fan.physical_max_cfm * (1 - self.ea_damper.position / 100)
-        ra_max = self.ra_damper.get_cfm(ra_available)
+        # --- CFM ---
+        # Fan speed as % of physical max gives steady-state CFM
+        supply_cfm = (self.supply_fan.speed / 100.0) * self.supply_fan.physical_max_cfm
+        return_cfm = (self.return_fan.speed / 100.0) * self.return_fan.physical_max_cfm
 
-        # Fan effective range is limited by what dampers allow
-        self.supply_fan.set_incoming_cfm(oa_max + ra_max)
-        self.return_fan.set_incoming_cfm(ra_max)
+        if supply_cfm == 0 or return_cfm == 0:
+            return {}, {}
 
-        # Fan speed determines actual CFM within that range
-        self.supply_fan.set_speed(self.supply_fan.speed)
-        self.return_fan.set_speed(self.return_fan.speed)
+        # OA/RA split is determined by relative damper positions
+        total_damper = self.oa_damper.position + self.ra_damper.position
+        oa_fraction  = (self.oa_damper.position / total_damper) if total_damper > 0 else 0.0
+        ra_fraction  = 1.0 - oa_fraction
 
-        supply_cfm = self.supply_fan.get_cfm()
-        return_cfm = self.return_fan.get_cfm()
-        self.supply_air_flow = supply_cfm
-        self.return_air_flow = return_cfm
-
-        # Distribute actual CFM proportionally through OA/RA
-        ma_max = oa_max + ra_max
-        self.oa.cfm = supply_cfm * (oa_max / ma_max) if ma_max else 0
-        self.ra.cfm = supply_cfm - self.oa.cfm
+        self.oa.cfm          = supply_cfm * oa_fraction
+        self.ra.cfm          = supply_cfm * ra_fraction
+        self.ma.cfm          = supply_cfm
+        self.sa.cfm          = supply_cfm
+        self.supply_air_flow  = supply_cfm
+        self.return_air_flow  = return_cfm
         self.outdoor_air_flow = self.oa.cfm
-        self.ma.cfm = self.oa.cfm + self.ra.cfm
-        self.sa.cfm = self.ma.cfm
 
-        # Check for airflow as we would in real life
-        if self.supply_fan.cfm == 0 or self.return_fan.cfm == 0:
-            return self.__dict__()
-        
-        if self.ma.cfm == 0:
-            return self.__dict__()
-        
-        self.ma.temp = (self.oa.temp * self.oa.cfm + self.ra.temp * self.ra.cfm) / self.ma.cfm
+        # --- Mixed air temperature ---
+        self.ma.temp = (self.oa.temp * self.oa.cfm + self.ra.temp * self.ra.cfm) / supply_cfm
 
-        cooling_btu, heating_btu = 0, 0
+        # --- Coil heat transfer ---
+        # SA starts at MA temp each tick; coils adjust it up or down
+        EFFECTIVENESS = 0.85
+        self.sa.temp = self.ma.temp
 
-        # Calculate cooling and heating effects
-        if self.state == AirUnitState.COOLING:
-            cooling_btu = self.ma.calculate_btu(self.cooling_coil.temp)
-            self.sa.update_temp(cooling_btu)
-            self.heating_coil.update_temp(self.ma.temp)
+        # Cooling coil only removes heat when it is colder than the air
+        if self.cooling_coil.temp < self.sa.temp:
+            self.sa.temp += EFFECTIVENESS * (self.cooling_coil.temp - self.sa.temp)
 
-        if self.state == AirUnitState.HEATING:
-            heating_btu = self.ma.calculate_btu(self.heating_coil.temp)
-            self.sa.update_temp(heating_btu)
-            self.cooling_coil.update_temp(self.sa) # Need to apply already heated air since cooling coil is past the heating coil
+        # Heating coil only adds heat when it is warmer than the air
+        if self.heating_coil.temp > self.sa.temp:
+            self.sa.temp += EFFECTIVENESS * (self.heating_coil.temp - self.sa.temp)
 
-        net_btu = cooling_btu + heating_btu
-        self.sa.btu = net_btu
+        # BTU/hr delivered to the supply air stream
+        self.sa.btu = (supply_cfm * self.sa.density * self.sa.specific_heat *
+                       (self.sa.temp - self.ma.temp) * 60)
 
-        zone_temps  = []
-        zone_states = {}
+        # --- Zone heat transfer ---
+        # Supply CFM is divided evenly among zones; VAV damper modulates each zone's share
+        zone_cfm_each = supply_cfm / len(zones) if zones else 0
+        zone_temps    = []
+        zone_states   = {}
 
-        for zone_id, zone_object in zones.items():
-            zone_object.vav.sa.cfm = zone_object.vav.damper.get_cfm(self.supply_air_flow)
-            zone_object.vav.sa.temp = self.sa.temp
+        for zone_id, zone_obj in zones.items():
+            actual_cfm           = zone_cfm_each * (zone_obj.vav.damper.position / 100.0)
+            zone_obj.vav.sa.cfm  = actual_cfm
+            zone_obj.vav.sa.temp = self.sa.temp
+            zone_obj.air.cfm     = actual_cfm
 
-            if zone_object.vav.heating_coil:
-                vav_reheat_btu = zone_object.vav.sa.calculate_btu(zone_object.vav.heating_coil.temp)
-                zone_object.vav.sa.update_temp(vav_reheat_btu)
+            # VAV reheat coil (if present)
+            if zone_obj.vav.heating_coil and zone_obj.vav.heating_coil.temp > zone_obj.vav.sa.temp:
+                zone_obj.vav.sa.temp += EFFECTIVENESS * (
+                    zone_obj.vav.heating_coil.temp - zone_obj.vav.sa.temp
+                )
 
-            zone_object.air.cfm = zone_object.vav.sa.cfm
+            # First-order zone temperature model:
+            # zone_temp moves toward SA temp at a rate set by how many air changes
+            # occur during this time step relative to the zone volume
+            if zone_obj.volume > 0 and actual_cfm > 0:
+                air_change = min((actual_cfm * self.sa.time_step / 60.0) / zone_obj.volume, 1.0)
+                zone_obj.air.temp += air_change * (zone_obj.vav.sa.temp - zone_obj.air.temp)
 
-            zone_btu = zone_object.air.calculate_btu(zone_object.vav.sa.temp)
-
-            zone_object.air.update_temp(zone_btu / (zone_object.air.density * zone_object.air.specific_heat * 1000))
-            zone_temps.append(zone_object.air.temp)
-        
-
+            zone_temps.append(zone_obj.air.temp)
             zone_states[zone_id] = {
-                "air_temp": zone_object.air.temp,
-                "setpoint": zone_object.setpoint,
-                "vav_sa_temp" : zone_object.vav.sa.temp,
-                "vav_dpr_pos" : zone_object.vav.damper.position,
-                "height" : zone_object.height,
-                "width" : zone_object.width,
-                "length" : zone_object.length,
-                "volume" : zone_object.volume,
-                "trend_logs" : {k: v.Save() for k, v in zone_object.trend_logs.items()}
+                "air_temp":    zone_obj.air.temp,
+                "setpoint":    zone_obj.setpoint,
+                "vav_sa_temp": zone_obj.vav.sa.temp,
+                "vav_dpr_pos": zone_obj.vav.damper.position,
+                "height":      zone_obj.height,
+                "width":       zone_obj.width,
+                "length":      zone_obj.length,
+                "volume":      zone_obj.volume,
+                "trend_logs":  {k: v.Save() for k, v in zone_obj.trend_logs.items()}
             }
-        
-        
-        self.ra.temp = sum(zone_temps) / len(zone_temps)
 
-        
+        # Return air is the average of all zone temperatures
+        if zone_temps:
+            self.ra.temp = sum(zone_temps) / len(zone_temps)
+
         airunit_state = {
-            "sa_temp": self.sa.temp,
-            "sa_humidity": self.sa.humidity,
-            "sa_btu": self.sa.btu,
-            "sa_fan_speed": self.supply_fan.speed,
-            "sa_flow": self.supply_air_flow,
-            "cooling_coil_temp": self.cooling_coil.temp,
-            "heating_coil_temp": self.heating_coil.temp,
-            "ma_temp": self.ma.temp,
-            "ma_humidity": self.ma.humidity,
-            "ma_btu": self.ma.btu,
-            "ma_flow": self.ma.cfm,
-            "ra_temp": self.ra.temp,
-            "ra_fan_speed": self.return_fan.speed,
-            "ra_flow": self.return_air_flow,
+            "sa_temp":            self.sa.temp,
+            "sa_humidity":        self.sa.humidity,
+            "sa_btu":             self.sa.btu,
+            "sa_fan_speed":       self.supply_fan.speed,
+            "sa_flow":            self.supply_air_flow,
+            "cooling_coil_temp":  self.cooling_coil.temp,
+            "heating_coil_temp":  self.heating_coil.temp,
+            "ma_temp":            self.ma.temp,
+            "ma_humidity":        self.ma.humidity,
+            "ma_btu":             self.ma.btu,
+            "ma_flow":            self.ma.cfm,
+            "ra_temp":            self.ra.temp,
+            "ra_fan_speed":       self.return_fan.speed,
+            "ra_flow":            self.return_air_flow,
             "ra_damper_position": self.ra_damper.position,
             "ea_damper_position": self.ea_damper.position,
-            "oa_temp": self.oa.temp,
-            "oa_humidity": self.oa.humidity,
-            "oa_btu": self.oa.btu,
+            "oa_temp":            self.oa.temp,
+            "oa_humidity":        self.oa.humidity,
+            "oa_btu":             self.oa.btu,
             "oa_damper_position": self.oa_damper.position,
-            "outdoor_air_flow": self.outdoor_air_flow,
+            "outdoor_air_flow":   self.outdoor_air_flow,
         }
 
         return zone_states, airunit_state

@@ -7,7 +7,7 @@ export function useZones(zone_num) {
     const [loading, setLoading] = useState(null)
     const [error,   setError]   = useState(null)
 
-    const url = `${import.meta.env.VITE_API_URL}/hvac/api/${session_id}/`
+    const url = `${import.meta.env.VITE_API_URL}/hvac/api/${session_id}/zones/`
 
     async function PostData(zone_id, point_name, data){
         const options = {
