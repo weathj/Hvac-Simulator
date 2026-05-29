@@ -292,15 +292,14 @@ class AirUnit:
         cooling_btu, heating_btu = 0, 0
 
         # Calculate cooling and heating effects
-        if self.state == AirUnitState.COOLING:
-            cooling_btu = self.ma.calculate_btu(self.cooling_coil.temp)
-            self.sa.update_temp(cooling_btu)
-            self.heating_coil.update_temp(self.ma.temp)
+        cooling_btu = self.ma.calculate_btu(self.cooling_coil.temp)
+        self.sa.update_temp(cooling_btu)
+        # self.heating_coil.update_temp(self.ma.temp) <- Bypassing to treat as setpoint for now
 
-        if self.state == AirUnitState.HEATING:
-            heating_btu = self.ma.calculate_btu(self.heating_coil.temp)
-            self.sa.update_temp(heating_btu)
-            self.cooling_coil.update_temp(self.sa) # Need to apply already heated air since cooling coil is past the heating coil
+
+        heating_btu = self.ma.calculate_btu(self.heating_coil.temp)
+        self.sa.update_temp(heating_btu)
+        # self.cooling_coil.update_temp(self.sa) # Need to apply already heated air since cooling coil is past the heating coil <- Bypassing to treat as setpoint for now
 
         net_btu = cooling_btu + heating_btu
         self.sa.btu = net_btu

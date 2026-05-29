@@ -14,6 +14,17 @@ export function SessionProvider({ children }) {
         }
     }, [])
 
+    useEffect(() => {
+        const handleUnload = () => {
+            if (session_id) {
+                navigator.sendBeacon(`${import.meta.env.VITE_API_URL}/hvac/api/${session_id}/delete/`)
+            }
+        }
+
+        window.addEventListener('beforeunload', handleUnload)
+        return () => window.removeEventListener('beforeunload', handleUnload)
+    }, [session_id])
+
     return (
         <SessionContext.Provider value={{ session_id }}>
             {children}

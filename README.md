@@ -20,6 +20,10 @@ When air streams mix, the receiver's air temperature is calculated as a mass-wei
 
 `hvac.engine.events` — This was new to the recent version. I was focused on decoupling systems and pulling logic out of the simulation loop. This also made trend logs easier to implement and enabled a coordinated air handler runtime.
 
+## Session
+
+`hvac.utils.session` a session is created by the global session manager on the backend. When the react app mounts, it will call the `/create/` api which will let the global session manager register a new session. Pending no errors, the server will respond with a valid session_id. 
+
 ## HVAC
 
 `hvac.engine.core` is responsible for all HVAC objects and calculations.
@@ -36,7 +40,7 @@ Trends were designed for the frontend graphs and as a logging resource. Time and
 
 ## Sim Loop
 
-Manages two versions of the object: a database version and a class instance. This was the easiest way I found to keep an up-to-date database while utilizing the object's class methods.
+Each session runs it's own independent sim loop. The sim loop manages two versions of the object: a database version and a class instance. This was the easiest way I found to keep an up-to-date database while utilizing the object's class methods.
 
 # Future Versions
 I may expand this to include latent cooling effects.

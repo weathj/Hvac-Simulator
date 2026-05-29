@@ -55,3 +55,7 @@ class SessionManager:
         current_session = self.active_sessions[id]
         asyncio.create_task(current_session.start_session())
         return current_session
+    
+    def delete_session(self, session_id):
+        self.active_sessions[session_id].sim.cleanup(session_id)
+        del self.active_sessions[session_id]

@@ -6,7 +6,7 @@ export function useSession() {
     const [ error, setError ] = useState(null);
     const [ session_id, setSessionId ] = useState(null);
 
-    const url = `${import.meta.env.VITE_API_URL}/hvac/api/create/`
+    const url = `${import.meta.env.VITE_API_URL}/hvac/api`
 
     async function CreateSession(){
         const options = {
@@ -14,13 +14,26 @@ export function useSession() {
             headers: { "Content-Type" : "application/json"},
             body: JSON.stringify({ 'session-type' : 'new' })
         }
-        const response = await fetch(url, options)
+        const response = await fetch(`${url}/create/`, options)
         if (!response.ok) {
             setError(response)
             return
         }
         const result = await response.json()
         setSessionId(result.session_id)
+    }
+
+    async function EndSession(){
+        const options = {
+            method: "POST",
+            headers: { "Content-Type" : "application/json"},
+            body: JSON.stringify({ 'session-type' : 'end' })
+        }
+        const response = await fetch(`${url}/${session_id}/delete`, options)
+        if (!response.ok) {
+            setError(response)
+            return
+        }
     }
 
     useEffect(() => {
@@ -59,5 +72,5 @@ export function useSession() {
         };
     }, [url]);
 
-    return { data, error, session_id, CreateSession };
+    return { data, error, session_id, CreateSession, EndSession };
 }
