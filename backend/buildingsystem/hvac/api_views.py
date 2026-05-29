@@ -16,46 +16,46 @@ class AirUnitValuesView(APIView):
         airunit = AirUnit.objects.filter(session_id=session_id)
         serializer = AirUnitSerializer(airunit, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request, session_id):
-        airunit = AirUnit.objects.filter(session_id=session_id)
+        airunit = AirUnit.objects.get(session_id=session_id)
         serializer = AirUnitSerializer(airunit, data=request.data, partial=True)
         print(request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors)
-    
+
 class ZoneValuesView(APIView):
     def get(self, request, session_id, pk):
-        zones = Zone.objects.filter(session_id=session_id).all()
+        zones = Zone.objects.filter(session_id=session_id)
         zone = zones.get(pk=pk)
         serializer = ZoneSerializer(zone)
         return Response(serializer.data)
-    
+
     def post(self, request, session_id, pk):
-        zones = Zone.objects.filter(session_id=session_id).all()
+        zones = Zone.objects.filter(session_id=session_id)
         zone = zones.get(pk=pk)
         serializer = ZoneSerializer(zone, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors)
-    
+
 class AllZoneValuesView(APIView):
     def get(self, request, session_id):
-        zones = Zone.objects.filter(session_id=session_id).all()
+        zones = Zone.objects.filter(session_id=session_id)
         serializer = ZoneSerializer(zones, many=True)
         return Response(serializer.data)
-    
+
 class AirValuesView(APIView):
     def get(self, request, session_id):
-        air = Air.objects.filter(session_id=session_id)
+        air = Air.objects.get(session_id=session_id)
         serializer = AirSerializer(air, many=False)
         return Response(serializer.data)
-    
+
     def post(self, request, session_id):
-        air = Air.objects.filter(session_id=session_id)
+        air = Air.objects.get(session_id=session_id)
         serializer = AirSerializer(air, data=request.data, many=False)
         if serializer.is_valid():
             serializer.save()
@@ -81,3 +81,8 @@ class CreateView(View):
             s = session.manager.new_session()
             return JsonResponse(s.to_dict())
         return JsonResponse({'error': 'invalid session-type'}, status=400)
+    
+class DeleteView(APIView):
+    def post(self, request, session_id):
+        session.manager.delete_session(session_id)
+        return Response({'status': 'deleted'})

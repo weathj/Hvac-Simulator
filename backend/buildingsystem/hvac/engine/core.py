@@ -278,13 +278,15 @@ class AirUnit:
         EFFECTIVENESS = 0.85
         self.sa.temp = self.ma.temp
 
-        # Cooling coil only removes heat when it is colder than the air
-        if self.cooling_coil.temp < self.sa.temp:
-            self.sa.temp += EFFECTIVENESS * (self.cooling_coil.temp - self.sa.temp)
+        # Calculate cooling and heating effects
+        cooling_btu = self.ma.calculate_btu(self.cooling_coil.temp)
+        self.sa.update_temp(cooling_btu)
+        # self.heating_coil.update_temp(self.ma.temp) <- Bypassing to treat as setpoint for now
 
-        # Heating coil only adds heat when it is warmer than the air
-        if self.heating_coil.temp > self.sa.temp:
-            self.sa.temp += EFFECTIVENESS * (self.heating_coil.temp - self.sa.temp)
+
+        heating_btu = self.ma.calculate_btu(self.heating_coil.temp)
+        self.sa.update_temp(heating_btu)
+        # self.cooling_coil.update_temp(self.sa) # Need to apply already heated air since cooling coil is past the heating coil <- Bypassing to treat as setpoint for now
 
         # BTU/hr delivered to the supply air stream
         self.sa.btu = (supply_cfm * self.sa.density * self.sa.specific_heat *

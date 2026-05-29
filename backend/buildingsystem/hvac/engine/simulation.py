@@ -3,13 +3,15 @@ from hvac.engine import core as c
 from hvac.engine import events
 from hvac.engine import trends
 from hvac.engine.trends import TrendType
-from hvac.utils import dbsaver, logger
+from hvac.utils import dbsaver, logger, session
 import os
 import time
 
 class Simulation:
     def __init__(self, session_id, zones = 3):
         self.session_id = session_id
+        self.air_unit_obj = None
+        self.zones_obj = None
         self.zones = zones
 
     def calculate(self):
@@ -44,11 +46,17 @@ class Simulation:
             zones[zone].trend_logs["zone_temp"] = trends.TrendLog("air_temp", trends.TrendType.ZONE, bus)
             zones[zone].trend_logs["zone_sa_temp"] = trends.TrendLog("vav_sa_temp", trends.TrendType.ZONE, bus)
 
+
+        # give class object references to the class objects
+        self.zones_obj = zones
+        self.air_unit_obj = air_unit
+
         # Dynamically write database changes to keep sim loop decoupled from logic
         db = dbsaver.DBSaver(zones_db, airunit_db)
         bus.subscribe('state_updated', db.update_data)
 
         air_unit.startup()
+        
 
         # Write startup state to DB so the loop's refresh_from_db reads back the correct values
         airunit_db.cooling_coil_temp  = air_unit.cooling_coil.temp
@@ -94,4 +102,8 @@ class Simulation:
             bus.publish('time', tick)
             tick += 0.5
             time.sleep(0.5)
-        
+
+    def cleanup(self, session_id):
+        self.air_unit_obj.shutdown()
+        AirUnit.objects.filter(session_id= session_id).all().delete()
+        Zone.objects.filter(session_id= session_id).all().delete()

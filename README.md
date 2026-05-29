@@ -22,7 +22,7 @@ When air streams mix, the receiver's air temperature is calculated as a mass-wei
 
 ## Session
 
-`hvac.utils.session` a session is created by the global session manager on the backend. When the react app mounts, it will call the `/create/` api which will let the global session manager register a new session and respond with the session information.
+`hvac.utils.session` a session is created by the global session manager on the backend. When the react app mounts, it will call the `/create/` api which will let the global session manager register a new session. Pending no errors, the server will respond with a valid session_id. 
 
 ## HVAC
 
