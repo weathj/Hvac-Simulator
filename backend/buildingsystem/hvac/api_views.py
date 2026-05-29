@@ -20,7 +20,6 @@ class AirUnitValuesView(APIView):
     def post(self, request, session_id):
         airunit = AirUnit.objects.get(session_id=session_id)
         serializer = AirUnitSerializer(airunit, data=request.data, partial=True)
-        print(request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

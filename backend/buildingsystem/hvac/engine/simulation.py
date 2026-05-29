@@ -75,7 +75,6 @@ class Simulation:
             
         while air_unit.unit_sts:
             # Pulling write values back from database before heat_cool to catch any changes from frontend.
-            print("Updating values")
             airunit_db.refresh_from_db()
             air_unit.cooling_coil.temp = airunit_db.cooling_coil_temp
             air_unit.heating_coil.temp = airunit_db.heating_coil_temp

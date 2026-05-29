@@ -2,9 +2,23 @@
 
 ![Dashboard - Air Handler Simulator](/screenshots/dashboard.png)
 
-My father worked in commercial and residential HVAC, and I previously worked as a controls programmer. I started this project a couple years ago as a learning tool for controls. I decided to pick it back up recently to rebuild the frontend and fix some annoying bugs. Eventually that turned into a new version with a new sim loop and Vite frontend.
+### Live Demo 
+[hvac-sim.com](https://hvac-sim.com) - not always running due to keep costs down, but happy to spin it up on request.
 
-Project is an air handler serving three VAV zones with a lite thermodynamics engine to calculate changes in temperature and airflow. Temperature change is calculated by BTU transfer. Dampers and fans dynamically adjust airflow based on position. The air handler will start and calculate temperatures automatically. The frontend displays air handler simulated sensor data such as temperature and airflow. Static values, such as humidity and setpoint, are also present and may be calculated in future versions. VAV and zone sensor data is also displayed with a slider to adjust VAV damper position. AHU values such as fan speeds, coil temperatures and damper positions can be changed.
+## Running Locally
+
+Requires [Docker](https://www.docker.com/get-started).
+
+```bash
+cp frontend/.env.example frontend/.env
+docker compose up --build
+```
+
+### Project Overview
+
+**Stack:** Django - React (Vite) - PostgreSQL - Docker
+
+Air handler serving three VAV zones with a lite thermodynamics engine to calculate changes in temperature and airflow. Temperature change is calculated by BTU transfer. Dampers and fans dynamically adjust airflow based on position. The air handler will start and calculate temperatures automatically. The frontend displays air handler simulated sensor data such as temperature and airflow. Static values, such as humidity and setpoint, are also present and may be calculated in future versions. VAV and zone sensor data is also displayed with a slider to adjust VAV damper position. AHU values such as fan speeds, coil temperatures and damper positions can be changed.
 
 Project contains Docker Compose files with an image for the frontend and an image for the backend. Backend is Django, frontend is Vite.
 
@@ -42,5 +56,17 @@ Trends were designed for the frontend graphs and as a logging resource. Time and
 
 Each session runs it's own independent sim loop. The sim loop manages two versions of the object: a database version and a class instance. This was the easiest way I found to keep an up-to-date database while utilizing the object's class methods.
 
-# Future Versions
-I may expand this to include latent cooling effects.
+## Future Versions
+**Latent Cooling** - Humidity and enthalpy tracking alongside sensible heat.
+
+**Pressure differentials** - duct static pressure, building static pressure.
+
+**Control Logic** - Allow control system to manage HVAC.
+
+**Configurable Zones** - Variable zone count and geometry.
+
+---
+
+### Project Background
+
+My father worked in commercial and residential HVAC, and I previously worked as a controls programmer. I started this project a couple years ago as a learning tool for controls. I decided to pick it back up recently to rebuild the frontend and fix some annoying bugs. Eventually that turned into a new version with a new sim loop and Vite frontend.
