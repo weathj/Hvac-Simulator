@@ -31,15 +31,25 @@ class Simulation:
         zones = {}
         zones_db   = {} 
 
+        setpoint    = 72.0
+        temp_spread = 5.0
+
         for zone in range(self.zones):
-            zone_obj = c.Zone(self.session_id, f'Zone-{zone}')
-            zones[zone] = zone_obj
+            start_temp = setpoint + (zone - (self.zones - 1) / 2) * temp_spread
+
+            zone_obj           = c.Zone(self.session_id, f'Zone-{zone}')
+            zone_obj.air.temp  = start_temp
+            zone_obj.setpoint  = setpoint
+            zones[zone]        = zone_obj
+
             zones_db[zone] = Zone.objects.create(
                 session_id = self.session_id,
-                name = f'Zone-{zone}',
-                height = zone_obj.height,
-                width = zone_obj.width,
-                length = zone_obj.length
+                name       = f'Zone-{zone}',
+                air_temp   = start_temp,
+                setpoint   = setpoint,
+                height     = zone_obj.height,
+                width      = zone_obj.width,
+                length     = zone_obj.length
             )
 
             zones[zone].startup()

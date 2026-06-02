@@ -25,7 +25,7 @@ Project contains Docker Compose files with an image for the frontend and an imag
 ## Temperature Change
 
 ### Coils
-The entering air calculates its BTU per sim time step based on the difference between its air temperature and the coil's temperature. BTU per sim time step is calculated using the sensible heat equation, where the change in temperature is the time-adjusted change in temperature. This change in temperature is also limited to a maximum of 5°F per minute. This limit was decided based on realistic numbers I was seeing in the field vs. logs from the simulator. The BTU per sim time step is then used in the sensible heat equation, rearranged to calculate the updated leaving air temperature.
+The entering air calculates its BTU per sim time step based on the difference between its air temperature and the coil's temperature. BTU per sim time step is calculated using the sensible heat equation, where the change in temperature is the time-adjusted change in temperature. This change in temperature is also limited by coil effectiveness. The BTU per sim time step is then used in the sensible heat equation, rearranged to calculate the updated leaving air temperature.
 
 ### Air Mixing and Meeting
 When air streams mix, the receiver's air temperature is calculated as a mass-weighted average by CFM.
@@ -42,7 +42,7 @@ When air streams mix, the receiver's air temperature is calculated as a mass-wei
 
 `hvac.engine.core` is responsible for all HVAC objects and calculations.
 
-`Air` currently calculates BTU transfer and temperature change based on BTU per sim time step.
+`Air` currently calculates BTU transfer and temperature change based on BTU per sim time step. BTU calculation is capped at a 5°F maximum per tick.
 
 All HVAC air handler objects have an air component. This is how air is simulated moving through the air handler. `Air`, `Fan`, `Coil`, and `Damper` all make up an air handler serving VAVs. `Fan` can calculate its own CFM based on speed when set. `Damper` can calculate airflow based on size and actuator position.
 

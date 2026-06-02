@@ -135,6 +135,7 @@ class Fan:
     
     def set_incoming_cfm(self, incoming_cfm):
         self.max_cfm = min(incoming_cfm, self.physical_max_cfm)
+        self.min_cfm = min(self.min_cfm, self.max_cfm)
 
     def startup(self):
         self.fan_sts = True
@@ -178,6 +179,7 @@ class Coil:
         self.width = width
         self.temp = 0.0
         self.time_step = time_step
+        self.effectiveness = 0.85 # 85% — typical commercial coil bypass factor of 0.15
 
     def get_area(self):
         return self.height * self.width
@@ -289,27 +291,31 @@ class AirUnit:
         
         self.ma.temp = (self.oa.temp * self.oa.cfm + self.ra.temp * self.ra.cfm) / self.ma.cfm
 
-        cooling_btu, heating_btu = 0, 0
+        # SA starts as mixed air each tick; coils act instantly on passing air
+        self.sa.temp = self.ma.temp
+        sa_entering_temp = self.sa.temp
 
-        # Calculate cooling and heating effects
-        cooling_btu = self.ma.calculate_btu(self.cooling_coil.temp)
-        self.sa.update_temp(cooling_btu)
-        # self.heating_coil.update_temp(self.ma.temp) <- Bypassing to treat as setpoint for now
+        # Cooling coil only acts when the coil is colder than the air
+        if self.cooling_coil.temp < self.sa.temp:
+            self.sa.temp += (self.cooling_coil.temp - self.sa.temp) * self.cooling_coil.effectiveness
 
+        # Heating coil only acts when the coil is warmer than the leaving air
+        if self.heating_coil.temp > self.sa.temp:
+            self.sa.temp += (self.heating_coil.temp - self.sa.temp) * self.heating_coil.effectiveness
 
-        heating_btu = self.ma.calculate_btu(self.heating_coil.temp)
-        self.sa.update_temp(heating_btu)
-        # self.cooling_coil.update_temp(self.sa) # Need to apply already heated air since cooling coil is past the heating coil <- Bypassing to treat as setpoint for now
-
-        net_btu = cooling_btu + heating_btu
-        self.sa.btu = net_btu
+        # BTU/hr: mass flow (lb/hr) × specific heat × delta-T
+        mass_flow_hr = self.sa.cfm * self.sa.density * 60
+        self.sa.btu = mass_flow_hr * self.sa.specific_heat * (self.sa.temp - sa_entering_temp)
 
         zone_temps  = []
         zone_states = {}
 
         for zone_id, zone_object in zones.items():
             zone_object.vav.sa.cfm = zone_object.vav.damper.get_cfm(self.supply_air_flow)
-            zone_object.vav.sa.temp = self.sa.temp
+
+            # damper effect airflow
+            damper_fraction = zone_object.vav.damper.position / 100.0
+            zone_object.vav.sa.temp = (self.sa.temp * damper_fraction) + (zone_object.air.temp * (1 - damper_fraction))
 
             if zone_object.vav.heating_coil:
                 vav_reheat_btu = zone_object.vav.sa.calculate_btu(zone_object.vav.heating_coil.temp)
@@ -319,7 +325,7 @@ class AirUnit:
 
             zone_btu = zone_object.air.calculate_btu(zone_object.vav.sa.temp)
 
-            zone_object.air.update_temp(zone_btu / (zone_object.air.density * zone_object.air.specific_heat * 1000))
+            zone_object.air.update_temp(zone_btu)
             zone_temps.append(zone_object.air.temp)
         
 
