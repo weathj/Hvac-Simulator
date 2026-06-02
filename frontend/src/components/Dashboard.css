@@ -146,11 +146,11 @@
     }
 
     .mobile-nav {
-        display:     flex;
-        flex-shrink: 0;
-        background:  #0d1117;
-        border-top:  1px solid #21262d;
-        height:      52px;
+        display:       flex;
+        flex-shrink:   0;
+        background:    #0d1117;
+        border-bottom: 1px solid #21262d;
+        height:        52px;
     }
 
     .mobile-nav button {

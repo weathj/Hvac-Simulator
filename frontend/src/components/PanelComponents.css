@@ -132,6 +132,16 @@
 }
 
 @media (max-width: 768px) {
+    .panel-grid {
+        grid-template-columns: 1fr;
+        overflow-x: hidden;
+    }
+
+    .panel {
+        max-width: 100%;
+        overflow:  hidden;
+    }
+
     .adjust-buttons button {
         height:    44px;
         font-size: 1rem;

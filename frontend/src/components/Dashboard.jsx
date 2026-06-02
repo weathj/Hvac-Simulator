@@ -52,6 +52,18 @@ export default function Dashboard() {
                 </div>
             </header>
 
+            <nav className="mobile-nav">
+                <button className={mobilePage === 'zones'   ? 'active' : ''} onClick={() => setMobilePage('zones')}>
+                    <IconZones /> Zones
+                </button>
+                <button className={mobilePage === 'ahu'     ? 'active' : ''} onClick={() => setMobilePage('ahu')}>
+                    <IconAHU /> AHU
+                </button>
+                <button className={mobilePage === 'outdoor' ? 'active' : ''} onClick={() => setMobilePage('outdoor')}>
+                    <IconOutdoor /> Outdoor
+                </button>
+            </nav>
+
             <div className="shell-body">
                 <div className={`shell-sidebar${mobilePage === 'outdoor' ? ' mobile-active' : ''}`}>
                     <Panel title="Location" variant="outside">
@@ -68,18 +80,6 @@ export default function Dashboard() {
                     <AirUnitData />
                 </div>
             </div>
-
-            <nav className="mobile-nav">
-                <button className={mobilePage === 'zones'   ? 'active' : ''} onClick={() => setMobilePage('zones')}>
-                    <IconZones /> Zones
-                </button>
-                <button className={mobilePage === 'ahu'     ? 'active' : ''} onClick={() => setMobilePage('ahu')}>
-                    <IconAHU /> AHU
-                </button>
-                <button className={mobilePage === 'outdoor' ? 'active' : ''} onClick={() => setMobilePage('outdoor')}>
-                    <IconOutdoor /> Outdoor
-                </button>
-            </nav>
 
         </div>
     )
