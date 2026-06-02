@@ -31,7 +31,7 @@ export default function AirUnitData() {
                     <StatRow label="Temperature" value={ahu?.ra_temp} unit=" °F"  decimals={2}/>
                     <StatRow label="Flow"        value={ahu?.ra_flow} unit=" CFM"/>
                     <SliderRow label="Fan Speed"   point_name="ra_fan_speed" value={ahu?.ra_fan_speed} unit=" %"/>
-                    <SliderRow label="Damper Position" point_name="ra_damper_position" value={ahu?.ma_damper_position}  unit="%"/>
+                    <SliderRow label="Damper Position" point_name="ra_damper_position" value={ahu?.ra_damper_position}  unit="%"/>
                 </Panel>
                 
                 <Panel title="Exhaust Air" variant="exhaust">

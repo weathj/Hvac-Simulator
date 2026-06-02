@@ -102,3 +102,82 @@
     margin-top:     40px;
     text-align:     center;
 }
+
+/* ── Mobile nav bar ───────────────────────────────────────── */
+.mobile-nav {
+    display: none;
+}
+
+/* ── Responsive breakpoint ────────────────────────────────── */
+@media (max-width: 768px) {
+    .shell {
+        overflow: auto;
+    }
+
+    .shell-body {
+        flex-direction: column;
+        overflow:       visible;
+    }
+
+    .shell-sidebar,
+    .shell-info {
+        display: none;
+        width:   100%;
+        border:  none;
+        padding: 16px;
+    }
+
+    .shell-sidebar.mobile-active,
+    .shell-info.mobile-active {
+        display: flex;
+    }
+
+    .shell-content {
+        padding: 16px;
+    }
+
+    .shell-content.mobile-hidden {
+        display: none;
+    }
+
+    .mobile-nav {
+        display:          flex;
+        position:         sticky;
+        bottom:           0;
+        background:       #0d1117;
+        border-top:       1px solid #21262d;
+        height:           52px;
+        flex-shrink:      0;
+    }
+
+    .mobile-nav button {
+        flex:            1;
+        background:      transparent;
+        border:          none;
+        color:           #636e7b;
+        font-family:     inherit;
+        font-size:       0.6rem;
+        font-weight:     700;
+        letter-spacing:  0.1em;
+        text-transform:  uppercase;
+        cursor:          pointer;
+        display:         flex;
+        flex-direction:  column;
+        align-items:     center;
+        justify-content: center;
+        gap:             4px;
+        padding:         0;
+        border-top:      2px solid transparent;
+        transition:      color 0.15s, border-color 0.15s;
+    }
+
+    .mobile-nav button.active {
+        color:        #58a6ff;
+        border-color: #58a6ff;
+    }
+
+    .mobile-nav button svg {
+        width:  18px;
+        height: 18px;
+    }
+}
